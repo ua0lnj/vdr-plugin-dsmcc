@@ -1,0 +1,17 @@
+Tested with vdr 1.2.1
+
+cd vdr-1.2.1/PLUGINS/src/
+tar xzvf libdsmcc-0.?.tar.gz
+cd libdsmcc-0.?
+make
+cd ..
+tar xzvf vdr-dsmcc-0.3.0.tar.gz
+ln -s dsmcc-0.3.0 dsmcc
+cp libdsmcc-0.?/libdsmcc.a dsmcc/
+cd ../..
+patch -p1 < PLUGINS/src/dsmcc/vdr.dsmcc.patch
+make plugins
+
+Run ./vdr with -Pdsmcc
+
+Check files in /tmp/cache

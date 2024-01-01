@@ -1,0 +1,49 @@
+Plugin
+	o Move all parsing stuff in Receiver to a new object which can
+	  run in its own thread. 
+
+	o Move dsmcc / biop parsing to C library (?) (done!)
+
+	o Configuration options
+
+Minor Improvements
+
+	o Cleanup of code / Configurable debugging
+
+	o Parse TVGuide from teletext/bbc stream and write to epg.data
+	  to allow for a much better EPG until freeview get their act
+	  together...
+
+	o Support Event / Cancel messages
+
+	o Boot/Find the inital MHEG application
+
+	o Check transaction_id / version information to quickly filter
+	  duplicate messages
+
+	o Correctly link module info to modules rather than parsing
+	  everything in sight!.
+
+Major Improvements
+
+	o Add Stats / Debugging of stream (output to monitor or tv ?)
+
+	o Decode ASN1 (BER) files
+
+	o Review all structures to only save what is useful. Currently 
+	  parsing almost everything.
+
+	o Allow loading of a test stream from disk to parse (done!)
+
+	o Decoding PES packets containg video/audio data used by MHEG
+
+	o MHEG engine
+
+	o Thread to process MHEG scripts. (via MHEG engine)
+	
+	o Output to OSD/X11/MPEG1 of MHEG scripts, including video feed.
+
+	o Cache carousel filesystems or module data or both and re-load
+	  from disk whilst waiting for new data ( or if replaying ? )
+
+	o Support saving settop box upgrades ( transmitted on Type D streams ? )

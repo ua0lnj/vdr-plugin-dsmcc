@@ -1,0 +1,13 @@
+This is the beginnings of a ASN1 to textual notation MHEG5 decoder. I am
+still trying to find the mappings of some MHEG5 tags so any help appreciated.
+The list of current known/guesses is in decode.h
+
+BUILD
+	gcc -o decode decode.c
+
+TEST	
+	./decode [MHEG5 file] > output.asn
+
+
+richardp
+Jun 2003

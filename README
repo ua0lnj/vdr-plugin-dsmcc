@@ -1,0 +1,23 @@
+This is a "plugin" for the Video Disk Recorder (VDR).
+
+Written by:                  Richard Palmer <richard@magicality.org>
+
+Project's homepage:          http://www.magicality.org/code/dsmcc/
+
+See the file COPYING for license information.
+
+Description:
+
+Parses UK Profile 1.05/1.06 Object Carousel and saves files to disk (all
+stored under /tmp/cache at the moment). The files are the scripts and
+text/image data for MHEG5, the interactive(ish) element of digital TV. At
+the moment the MHEG scripts are not parsed, so to duplicate that 
+interactive experience, speedy usage of "cat" and "xv" is recommended.
+
+Alternatively, patches implementing ASN1 decoding of the scripts, a MHEG
+engine (Java one already available for free) or any of the improvements
+mentioned in TODO will help in providing true interactivity. (At which 
+time the UK will probably switch to MHP...)
+
+This is very alpha code, so might crash your setup a lot, please do not
+enable the plugin if you need vdr to record something.

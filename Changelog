@@ -1,0 +1,134 @@
+
+Wed Oct 29 14:03:39 GMT 2003
+
+	- Use libdsmcc to decode the transport stream.
+	
+	- Scanning code not tested, need to find a correct way to
+	  know when complete carousel has been received.
+
+	- Import into CVS
+
+--------------------------------------------------------------------------------
+
+2003-06-27: Version 0.3
+
+- Added some threading to receiver (doesnt work very well)
+- Added autoscan when hit dsmcc menu entry
+- Fixed more memory problems
+- Metadata decoding support from Marc Rovira Vall
+
+2003-05-21: Version 0.2.3
+
+- More fixes for new carousel code.
+- Started work on mapping ASN1 back to MHEG5 textual notation
+
+2003-05-20: Version 0.2.2
+
+- Separate carousel class to store each cache and other information. Various 
+  changes to support this.
+
+2003-05-16: Version 0.2.1
+
+- Handles multiple carousels and streams correctly. Seperate cache per
+  carousel.
+- Start of new logging system
+- Introduced new memory bug somewhere...
+
+2003-04-23: Version 0.2.0
+
+- Changed Version number =)
+
+2003-04-23: Version 0.1.5
+
+- Fixed infinite loop error parsing cached dirs
+- Write files out if data arrived previously, then parent directory
+  then FileInfo. All files should now be created in correct directory.
+- Improved SI parsing for MHP from Marc.
+
+2003-04-22: Version 0.1.4
+
+- Save MHP AIT table to /tmp/ait.table
+- Testing of MHP parsing by Marc Rovira Vall
+
+2003-04-22: Version 0.1.3
+
+- Improved support of MHP 
+- Cache file data that arrives before file info
+
+2003-03-25: Version 0.1.2
+
+- Fixed memory errors in 0.1.1
+- Re-attach previous arrived directory and files if arrived before parent
+  directory
+- Save directories and files in correct place in filesystem
+- Create directory structure under /tmp/cache/{ChannelName}
+
+2003-03-09: Version 0.1.1
+
+- Working on supporting MHP spec
+
+- Improved data block caching with (over)elaborate method. Now
+  saves data blocks even if they arrive halfway through sequence and
+  if drop a block we still save the following blocks, rather than
+  abandoning the entire sequence.
+
+2003-02-25: Version 0.1.0
+
+- First public release.
+- Fixed (3) last (hmmmm) memory errors in cache_module
+- Hashed out lots of debugging code, need to make config option along
+  with stats collection to show what is in the carousel.
+- Fixed incorrect checking for CRC flag, had been dropping (valid) modules
+- Fixed problems when data block duplicated, keep count of current block.
+  (BBC carousels seem to send duplicate blocks in series for some modules?)
+- Tried to cleanup code (and failed!)
+
+2003-03-24: Version 0.0.9
+
+- Fixed SI parsing code (problems with teletext, BBC Parliament streams)
+- Fixed (last?) memory problem, program now quits without core dump!
+
+2003-03-21: Version 0.0.8
+
+- Added code to VDR to allow pids to be added after the cReceiver constructor
+  is called, as the plugin now parses the DSI/DII messages to find which
+  streams the data is transmitted on. Possibly a better way to do this ?, or
+  maybe even just subscribe to all DSMCC streams ?.
+
+2003-03-18: Version 0.0.7
+
+- Swiped SI parsing code from Ragnar Sundblad's ttxtsubs plugin. Modifying
+  to parse MHEG streams.
+
+2003-03-12: Version 0.0.6
+- Fixed all (known) memory errors. Tested with various streams, seems to
+  cope. Need to improve memory freeing at end, parse PMT and connect tags
+  (should be seperate from dsmcc library ?), save files under correct dir
+  and improve caching. Then add some stats stuff, clean up and release. Maybe
+  next week ?.
+
+2003-03-03: Version 0.0.5
+
+- Wiped all files by accident. Mostly recovered from version 0.0.3 and 
+  by grepping through a dd'ed hard disk image.
+	(Tip from OxLUG mailing list,  
+		dd if=/dev/hda2 of=disk.img bs=32768
+		tr -c -d '[:print:]\n' < disk.img > hda2.text
+	)
+
+2003-02-21: Version 0.0.4
+
+- Saves files to filesystem in cache.
+
+2003-02-21: Version 0.0.3
+
+- Parses some of the Biop structures
+
+2003-02-15: Version 0.0.2
+
+- Parses some of dsmcc sections.
+
+2003-02-12: Version 0.0.1
+
+- rEceives dsmcc sections.
+	

@@ -1,0 +1,35 @@
+Documentation on the DSMCC / OO Carousel / MHEG structures taken from the
+following sources,
+
+	o ETSI TR 101 282 V1.2.1 
+	  Implementation guidelines for Data Broadcasting
+
+	  Overview of DSMCC and lists structures used along with
+	  defaults needed for DVB.
+
+	o ETSI EN 301 192 V1.3.1 
+	  DVB specification for data broadcasting
+
+	  Information on data carousel and descriptors structures.
+
+ETSI documents are available free from www.etsi.org, there are many
+useful documents but those two are the main ones.
+
+	o Digital Terrestrial Television MHEG5 Specification v1.05
+
+Provides default settings for UK version, available free from www.dtg.org.uk
+
+	o ATSC Implementation Guidelines for the ATSC Data Broadcast
+	  Standard (Doc. A/90)
+
+USA version of DSMCC, duplicates some useful tables. Available free from
+www.atsc.org
+
+	o MPEG2 various standards (including DSMCC)
+
+Available from various standards bodies for oddles of cash. (ANSI now sell 
+a PDF version for $18 dollars)
+
+	o MHEG5 standard
+
+Also available from Iso for oddles of cash. 

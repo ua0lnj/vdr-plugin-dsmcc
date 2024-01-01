@@ -1,0 +1,10 @@
+Thanks to the following for providing very useful bits of code,
+
+	o The code to parse the SI to extract carousel information is taken
+	  from Ragnar Sundblad's ttxtsubs plugin.
+
+	o The code to calculate the dsmcc section CRC is taken from the 
+	  libdtv code by Rolf Hakenes.
+
+	o Marc Rovira Vall for testing/improving MHP parsing
+
