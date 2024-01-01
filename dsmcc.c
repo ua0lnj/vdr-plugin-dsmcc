@@ -14,7 +14,7 @@
 
 static const char *VERSION        = "0.3.1";
 static const char *DESCRIPTION    = "Receive DSM-CC data and decode";
-static const char *MAINMENUENTRY  = "Dsmcc";
+//static const char *MAINMENUENTRY  = "Dsmcc";
 
 class cPluginDsmcc : public cPlugin {
 private:
@@ -29,9 +29,9 @@ public:
   virtual bool ProcessArgs(int argc, char *argv[]);
   virtual bool Start(void);
   virtual void Housekeeping(void);
-  virtual const char *MainMenuEntry(void) { return MAINMENUENTRY; }
-  // virtual const char *MainMenuEntry(void) { return NULL; }
-  virtual cOsdObject *MainMenuAction(void);
+//  virtual const char *MainMenuEntry(void) { return MAINMENUENTRY; }
+//  virtual const char *MainMenuEntry(void) { return NULL; }
+//  virtual cOsdObject *MainMenuAction(void);
   virtual cMenuSetupPage *SetupMenu(void);
   virtual bool SetupParse(const char *Name, const char *Value);
 };
@@ -81,14 +81,14 @@ void cPluginDsmcc::Housekeeping(void)
 {
   // Perform any cleanup or other regular tasks.
 }
-
+/*
 cOsdObject *cPluginDsmcc::MainMenuAction(void)
 {
-//  cDsmccStatus->ScanChannels(20);	
+//  cDsmccStatus->ScanChannels(20);
   // Perform the action when selected from the main VDR menu.
   return NULL;
 }
-
+*/
 cMenuSetupPage *cPluginDsmcc::SetupMenu(void)
 {
   // Return a setup menu in case the plugin supports one.
