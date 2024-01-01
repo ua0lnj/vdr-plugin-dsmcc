@@ -12,7 +12,7 @@
 #include "dsmcc-siinfo.h"
 // #include <mpatrol.h>
 
-static const char *VERSION        = "0.3.1";
+static const char *VERSION        = "0.4.0";
 static const char *DESCRIPTION    = "Receive DSM-CC data and decode";
 //static const char *MAINMENUENTRY  = "Dsmcc";
 

@@ -254,46 +254,6 @@ struct app_info_table {
 	struct app_info_sect *sections;
 };
 
-static int SetSectFilt(int fd, unsigned short pid, uint8_t tnr, uint8_t mask)
-{
-  int ret;
-
-  struct dmx_sct_filter_params p;
-
-  memset(&p, 0, sizeof(p));
-
-  p.filter.filter[0] = tnr;
-  p.filter.mask[0] = mask;
-  p.pid     = pid;
-  p.timeout = 800;
-  p.flags = DMX_IMMEDIATE_START | DMX_CHECK_CRC;
-
-  if ((ret = ioctl(fd, DMX_SET_FILTER, &p)) < 0)
-    perror("DMX SET FILTER:");
-
-  return ret;
-}
-
-static int SetSectFilt2(int fd, unsigned short pid, uint8_t tnr, uint8_t mask)
-{
-  int ret;
-
-  struct dmx_sct_filter_params p;
-
-  memset(&p, 0, sizeof(p));
-
-  p.filter.filter[0] = tnr;
-  p.filter.mask[0] = mask;
-  p.pid     = pid;
-  //p.timeout = 600;
-  p.flags = DMX_IMMEDIATE_START | DMX_CHECK_CRC;
-
-  if ((ret = ioctl(fd, DMX_SET_FILTER, &p)) < 0)
-    perror("DMX SET FILTER:");
-
-  return ret;
-}
-
 /*
  * PID - pid to collect on
  * table_id - table id to filter out (H.222.0 table 2-26)
@@ -302,36 +262,20 @@ static int SetSectFilt2(int fd, unsigned short pid, uint8_t tnr, uint8_t mask)
  * returns - 0 if everything ok
  */
 #define SECTSIZE 1024
-static int CollectSections(int card_no, int pid, int table_id, char **sects, int *numsects)
+static int CollectSections(cDevice *device, int pid, int table_id, char **sects, int *numsects)
 {
   int fd;
   int ret = -1;
   int last_section = 0;
   int done = 0;
   char *p = NULL;
-  int n;
-  char name[100];
+  int n, c = 0;
+//  char name[100];
 
   syslog(LOG_ERR, "COllectSections");
-
-  syslog(LOG_ERR, "opening  adapter%d", card_no);
-  snprintf(name, sizeof(name), "/dev/dvb/adapter%d/demux0", card_no);
-
   memset(sects, 0, sizeof(char*) * 256);
 
-  if((fd = open(name, O_RDWR)) < 0){
-    syslog(LOG_ERR, "failed to open adapter%d", card_no);
-    perror("DEMUX DEVICE 1: ");
-    return -1;
-  }
-
-
-  if(SetSectFilt(fd, pid, table_id, 0xff)) {
-    syslog(LOG_ERR, "setsectfilter failed");
-    ret = -1;
-    goto bail;
-  }
-
+  fd = device->OpenFilter(pid, table_id, 0xff);
 
   do {
     struct sect_header *h;
@@ -340,8 +284,14 @@ static int CollectSections(int card_no, int pid, int table_id, char **sects, int
     if(p == NULL)
       p = (char *) malloc(SECTSIZE);
 
-    n = read(fd, p, SECTSIZE);
+    n = device->ReadFilter(fd, p, SECTSIZE);
 
+    if((n == -1 || n < 8) && c++ < 2000) {
+      usleep(1000);
+      continue;
+    }
+    //syslog(LOG_ERR, "n %d c %d",n,c);
+    c = 0;
     if(n < 8) {
       syslog(LOG_ERR, "n < 8");
       break;
@@ -379,43 +329,31 @@ static int CollectSections(int card_no, int pid, int table_id, char **sects, int
 
   } while (!done);
 
-   syslog(LOG_ERR, "ret = %d", ret);
+  //syslog(LOG_ERR, "ret = %d", ret);
 
- bail:
-  close(fd);
+  device->CloseFilter(fd);
   return ret;
 }
 
 #define METADATA_SECT_SIZE 4096
 
-static int CollectMetadataSections(int card_no, int pid, int table_id, struct Metadata_sect **sects, int *numsects)
+static int CollectMetadataSections(cDevice *device, int pid, int table_id, struct Metadata_sect **sects, int *numsects)
 {
   int fd;
   int ret = -1;
   int last_section = 0;
   int done = 0;
   char *p = NULL;
-  int j, n;
+  int j, n, c = 0;
   int len;
-  char name[100];
+//  char name[100];
 
   if (table_id != 0x06) {
     perror("NOT A VALID Metadata Section: ");
     return -1;
   }
 
-  snprintf(name, sizeof(name), "/dev/dvb/adapter%d/demux0", card_no);
-  memset(sects, 0, sizeof(char*) * 256);
-
-  if((fd = open(name, O_RDWR)) < 0){
-    perror("DEMUX DEVICE 1: ");
-    return -1;
-  }
-
-  if(SetSectFilt2(fd, pid, table_id, 0xff)) {
-    ret = -1;
-    goto bail;
-  }
+  fd = device->OpenFilter(pid, table_id, 0xff);
 
   do {
     struct sect_header *h;
@@ -424,10 +362,15 @@ static int CollectMetadataSections(int card_no, int pid, int table_id, struct Me
     if(p == NULL)
       p = (char *) malloc(METADATA_SECT_SIZE);
 
-    n = read(fd, p, METADATA_SECT_SIZE);
+    n = device->ReadFilter(fd, p, METADATA_SECT_SIZE);
 
-    printf("n = %d\n", n);
+    if((n == -1 || n < 8) && c++ < 2000) {
+      usleep(1000);
+      continue;
+    }
 
+    //printf("n = %d\n", n);
+    c = 0;
     if(n < 8)
       break;
 
@@ -508,8 +451,7 @@ static int CollectMetadataSections(int card_no, int pid, int table_id, struct Me
 
   } while (!done);
 
- bail:
-  close(fd);
+  device->CloseFilter(fd);
   return ret;
 }
 
@@ -537,7 +479,7 @@ static void FreeMetadataSects(struct Metadata_sect **sects)
   }
 }
 
-static void ExtractMetadataSection(int card_no, int PID, char *chaname) {
+static void ExtractMetadataSection(cDevice *device, int PID, char *chaname) {
   FILE *metadata_fd;
   int numsects;
   char dirbuf1[256];
@@ -549,19 +491,19 @@ static void ExtractMetadataSection(int card_no, int PID, char *chaname) {
 
   int j, i = 0;
   while (1) {
-    CollectMetadataSections(card_no, PID, 0x06, metadatasects, &numsects);
+    CollectMetadataSections(device, PID, 0x06, metadatasects, &numsects);
 
-    sprintf(dirbuf1, "%s/%s", "/var/cache/vdr/dsmcc", chaname);
+    sprintf(dirbuf1, "%s/%s", cache, chaname);
     mkdir(dirbuf1, 0755);
 
     printf("First directory: %s\n", dirbuf1);
 
-    sprintf(dirbuf2, "%s/%s/%s", "/var/cache/vdr/dsmcc", chaname, "MetadataSections");
+    sprintf(dirbuf2, "%s/%s/%s", cache, chaname, "MetadataSections");
     mkdir(dirbuf2, 0755);
 
     printf("Second directory: %s\n", dirbuf2);
 
-    sprintf(filebuf, "%s/%s/%s/%s%d%s%d%s", "/var/cache/vdr/dsmcc", chaname, "MetadataSections", "file_", j, "_", PID, ".mp7");
+    sprintf(filebuf, "%s/%s/%s/%s%d%s%d%s", cache, chaname, "MetadataSections", "file_", j, "_", PID, ".mp7");
 
     metadata_fd = fopen(filebuf, "w");
 
@@ -580,7 +522,7 @@ static void ExtractMetadataSection(int card_no, int PID, char *chaname) {
   }
 }
 
-static void ExtractMhegInfo(int card_no, char **pmtsects, int numsects, struct dsmcc_status *status)
+static void ExtractMhegInfo(cDevice *device, char **pmtsects, int numsects, struct dsmcc_status *status)
 {
   int i;
   int car_num = 0;
@@ -605,6 +547,7 @@ static void ExtractMhegInfo(int card_no, char **pmtsects, int numsects, struct d
       if(status->debug_fd != NULL) {
         fprintf(status->debug_fd, "[pmtparse] Stream Type %X\n",s->stream_type);
       }
+      syslog(LOG_ERR, "Found Stream Type %X\n", s->stream_type);
 
       if(s->stream_type == 0xB) { // ISO/IEC 13818-6 Type B (DSMCC)
 	uint8_t *descr;
@@ -623,7 +566,7 @@ static void ExtractMhegInfo(int card_no, char **pmtsects, int numsects, struct d
 	      if(descr[0] == DATA_BROADCAST_ID) {
 		int length = descr[1];
 		data_id = descr[2] << 8 | descr[3];
-
+		syslog(LOG_ERR, "Object Carousel data_broadcast_id %x", data_id);
 		if(data_id == RU_MHEG_DATA || data_id == UK_MHEG_DATA) {
 		  int index = 4;
 		  while(index < length+2) {	/* Only 1 app defined... */
@@ -848,7 +791,7 @@ printf("------------------ METADATA carried in MetadataSection -----------------
             if (pidchild == 0) {
               printf("Child Process!\n");
 
-	      ExtractMetadataSection(card_no, ntohs(s->res_PID) & 0x1fff, status->channel_name);
+	      ExtractMetadataSection(device, ntohs(s->res_PID) & 0x1fff, status->channel_name);
 
 	    } else if (pidchild == -1) {
               perror("FORK ");
@@ -891,7 +834,7 @@ printf("------------------ METADATA carried in MetadataSection -----------------
 
 		/* Receive AIT sections from stream and write to /tmp
 		 * TODO - process AIT table */
-		CollectSections(card_no, ntohs(s->res_PID) & 0x1fff, 0x74,
+		CollectSections(device, ntohs(s->res_PID) & 0x1fff, 0x74,
 				aitsects, &numsects);
 		if(aitsects != NULL) {
 			ait_fd = fopen("/tmp/ait.table", "a");
@@ -918,18 +861,18 @@ printf("------------------ METADATA carried in MetadataSection -----------------
  * a fallback ). 
  */
 
-static int FindMhegInfoInPMT(int card_no, int pid, struct dsmcc_status *status)
+static int FindMhegInfoInPMT(cDevice *device, int pid, struct dsmcc_status *status)
 {
   int ret = -1;
   char *pmtsects[256];
   int numsects;
 
-  ret = CollectSections(card_no, pid, 0x02, pmtsects, &numsects);
+  ret = CollectSections(device, pid, 0x02, pmtsects, &numsects);
 
   if(ret)
     goto bail;
 
-  ExtractMhegInfo(card_no, pmtsects, numsects, status);
+  ExtractMhegInfo(device, pmtsects, numsects, status);
 
  bail:
   FreeSects(pmtsects);
@@ -942,7 +885,7 @@ static int FindMhegInfoInPMT(int card_no, int pid, struct dsmcc_status *status)
  * and if that fails with the VPID
  * return <> 0 on error;
  */
-int GetMhegInfo(int card_no, unsigned short sid, struct dsmcc_status *status)
+int GetMhegInfo(cDevice * device, unsigned short sid, struct dsmcc_status *status)
 {
   int ret;
   char *patsects[256];
@@ -955,7 +898,7 @@ int GetMhegInfo(int card_no, unsigned short sid, struct dsmcc_status *status)
 	  fprintf(status->debug_fd, "[pmtparse] Collecting MhegInfo\n");
   }
 
-  ret = CollectSections(card_no, 0, 0, patsects, &numsects);
+  ret = CollectSections(device, 0, 0, patsects, &numsects);
 
   if(ret) {
     syslog(LOG_ERR, "MhegInfo ret - %d", ret);
@@ -999,7 +942,7 @@ int GetMhegInfo(int card_no, unsigned short sid, struct dsmcc_status *status)
 
   if(pmt_pid != 0) {
     syslog(LOG_ERR, "pmt pid %x\n",pmt_pid);
-    ret = FindMhegInfoInPMT(card_no, pmt_pid, status);
+    ret = FindMhegInfoInPMT(device, pmt_pid, status);
   }
     
 bail:

@@ -19,9 +19,8 @@ void cDsmccMonitor::ChannelSwitch(const cDevice *Device, int ChannelNumber, bool
 {
 //  struct stream *streams = NULL, *str;
   int i;
-  int adapter;
+
   cDevice *device;
-  cDvbDevice *d;
 
   if(Device->IsPrimaryDevice() && ChannelNumber != 0) {
     delete receiver;
@@ -34,14 +33,12 @@ void cDsmccMonitor::ChannelSwitch(const cDevice *Device, int ChannelNumber, bool
 
     device = cDevice::ActualDevice();
     esyslog("Got change to channel");
-    d = (cDvbDevice*)device;
-    adapter = d->Adapter();
-    esyslog("Device = %s adapter %d", (const char*)device->DeviceName(), adapter);
-    if (adapter < 0) return;
+
+    esyslog("Device = %s", (const char*)device->DeviceName());
 
     receiver = new cDsmccReceiver(c->GetChannelID().ToString());
-    sleep(1);
-    GetMhegInfo(1, c->Sid(), receiver->status);
+
+    GetMhegInfo(device, c->Sid(), receiver->status);
 
     if(receiver->status->carousels[0].streams != NULL) {
 	esyslog("Found Object Carousel");

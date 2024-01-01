@@ -3,6 +3,7 @@
 
 #include <signal.h>
 #include "libdsmcc.h"
+#include <vdr/device.h>
 
 struct application_hint {
 	unsigned short type;
@@ -56,7 +57,7 @@ static struct struPids Pids;
  * and if that fails with the VPID
  * return <> 0 on error;
  */
-int GetMhegInfo(int, unsigned short, struct dsmcc_status *);
+int GetMhegInfo(cDevice *, unsigned short, struct dsmcc_status *);
 
 void KillMetadataPids();
 void ResetMetadataPids();
