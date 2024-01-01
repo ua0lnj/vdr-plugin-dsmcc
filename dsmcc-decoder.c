@@ -15,7 +15,7 @@ cDsmccReceiver::cDsmccReceiver(const char *channel) : cReceiver(0, -1) {
 		strcpy(name, "Unknown");
 	}
 
-	status = dsmcc_open(channel, NULL);	/* XXX pass log_fd */
+	status = dsmcc_open(channel, "/var/cache/vdr/dsmcc", NULL);	/* XXX pass log_fd */
 
         scanning = 0;   /* Set to 1 to scan thorugh all channels for carousel
                            Set to 0 to disable

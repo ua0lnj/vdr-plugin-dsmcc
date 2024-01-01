@@ -545,22 +545,23 @@ static void ExtractMetadataSection(int card_no, int PID, char *chaname) {
   char filebuf[256];
 
   struct Metadata_sect *metadatasects[256];
+  const char *cache = "/var/cache/vdr/dsmcc";
 
   int j, i = 0;
   while (1) {
     CollectMetadataSections(card_no, PID, 0x06, metadatasects, &numsects);
 
-    sprintf(dirbuf1, "%s/%s", "/tmp/cache", chaname);
+    sprintf(dirbuf1, "%s/%s", "/var/cache/vdr/dsmcc", chaname);
     mkdir(dirbuf1, 0755);
 
     printf("First directory: %s\n", dirbuf1);
 
-    sprintf(dirbuf2, "%s/%s/%s", "/tmp/cache", chaname, "MetadataSections");
+    sprintf(dirbuf2, "%s/%s/%s", "/var/cache/vdr/dsmcc", chaname, "MetadataSections");
     mkdir(dirbuf2, 0755);
 
     printf("Second directory: %s\n", dirbuf2);
 
-    sprintf(filebuf, "%s/%s/%s/%s%d%s%d%s", "/tmp/cache", chaname, "MetadataSections", "file_", j, "_", PID, ".mp7");
+    sprintf(filebuf, "%s/%s/%s/%s%d%s%d%s", "/var/cache/vdr/dsmcc", chaname, "MetadataSections", "file_", j, "_", PID, ".mp7");
 
     metadata_fd = fopen(filebuf, "w");
 
