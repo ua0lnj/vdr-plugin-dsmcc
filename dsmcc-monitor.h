@@ -9,7 +9,7 @@ class cDsmccMonitor : public cStatus {
 private:
 	cDsmccReceiver *receiver;
 protected:
-	virtual void ChannelSwitch(const cDevice *device,  int ChannelNumber);
+	virtual void ChannelSwitch(const cDevice *device,  int ChannelNumber, bool LiveView);
 public:
 	cDsmccMonitor(void);
 	~cDsmccMonitor();

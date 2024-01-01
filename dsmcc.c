@@ -84,7 +84,7 @@ void cPluginDsmcc::Housekeeping(void)
 
 cOsdObject *cPluginDsmcc::MainMenuAction(void)
 {
-  cDsmccStatus->ScanChannels(5);	
+//  cDsmccStatus->ScanChannels(20);	
   // Perform the action when selected from the main VDR menu.
   return NULL;
 }

@@ -1,13 +1,13 @@
 #include <stdlib.h>
 #include <zlib.h>
-#include <vdr/receiver.h>
+//#include <vdr/receiver.h>
 #include "dsmcc-decoder.h"
-#include "libdsmcc.h"
+//#include "libdsmcc.h"
 // #include <mpatrol.h>
 
-cDsmccReceiver::cDsmccReceiver(const char *channel) : cReceiver(0, -1, 0) {
+cDsmccReceiver::cDsmccReceiver(const char *channel) : cReceiver(0, -1) {
 
-	if(channel != '\0') {
+	if(channel != NULL) {
 		name = (char*)malloc(strlen(channel)+1);
 		strcpy(name, channel);
 	} else {
@@ -17,7 +17,7 @@ cDsmccReceiver::cDsmccReceiver(const char *channel) : cReceiver(0, -1, 0) {
 
 	status = dsmcc_open(channel, NULL);	/* XXX pass log_fd */
 
-        scanning = 1;   /* Set to 1 to scan thorugh all channels for carousel
+        scanning = 0;   /* Set to 1 to scan thorugh all channels for carousel
                            Set to 0 to disable
                         */
 
@@ -86,7 +86,7 @@ void cDsmccReceiver::AddStream(struct dsmcc_status *status, int pid) {
 #define dlog(a...)
 #define elog(a...)
 	
-void cDsmccReceiver::Receive(uchar *Data, int Length) {
+void cDsmccReceiver::Receive(const uchar *Data, int Length) {
 	int full_cache = 0;
 	int i;
 
@@ -103,11 +103,11 @@ void cDsmccReceiver::Receive(uchar *Data, int Length) {
                 }
         }
 
-        if(full_cache & scanning) {
+        if(full_cache) {
 //		esyslog("Detaching receiver");
 		Detach();
 		active = false;
-/*
+/*          if(scaning) {
                 cDevice *dev;
 //                esyslog("Switching channel after full cache");
                 dev = cDevice::PrimaryDevice();
@@ -117,6 +117,7 @@ void cDsmccReceiver::Receive(uchar *Data, int Length) {
 //                        esyslog("Finished switching channels for cache");
                         scanning = 0;
                 }
+            }
 */
         }
 

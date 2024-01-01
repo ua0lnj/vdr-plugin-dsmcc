@@ -1,7 +1,7 @@
 #ifndef DSMCC_DECODER_H
 #define DSMCC_DECODER_H
 
-#include "vdr/receiver.h"
+#include <vdr/receiver.h>
 #include "libdsmcc.h"
 
 class cDsmccReceiver : public cReceiver, cThread {
@@ -11,7 +11,7 @@ private:
 	char *name;
 
 protected:
-	virtual void Receive(uchar *Data, int Length);
+	virtual void Receive(const uchar *Data, int Length);
 	virtual void Activate(bool ON);
 	virtual void Action() { ; };
 public:

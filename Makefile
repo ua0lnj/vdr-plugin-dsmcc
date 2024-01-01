@@ -15,50 +15,70 @@ VERSION = $(shell grep 'static const char \*VERSION *=' $(PLUGIN).c | awk '{ pri
 
 ### The C++ compiler and options:
 
-CXX      ?= g++
-CXXFLAGS ?= -g -Wall -Woverloaded-virtual
+#CXX      ?= g++
+#CXXFLAGS ?= -g -Wall -Woverloaded-virtual
 
 ### The directory environment:
 
-DVBDIR = ../../../../DVB
-VDRDIR = ../../../
-LIBDIR = ../../lib
-TMPDIR = /tmp
+PKGCFG = $(if $(VDRDIR),$(shell pkg-config --variable=$(1) $(VDRDIR)/vdr.pc),$(shell pkg-config --variable=$(1) vdr || pkg-config --variable=$(1) ../../../vdr.pc))
+LIBDIR = $(DESTDIR)$(call PKGCFG,libdir)
+LOCDIR = $(DESTDIR)$(call PKGCFG,locdir)
+#DVBDIR = ../../../../DVB
+#VDRDIR = ../../../
+#LIBDIR = ../../lib
+TMPDIR = $(CACHEDIR)
 
 ### Allow user defined options to overwrite defaults:
+export CFLAGS   = $(call PKGCFG,cflags)
+export CXXFLAGS = $(call PKGCFG,cxxflags)
 
 -include $(VDRDIR)/Make.config
 
+CFLAGS += -fPIC
+CXXFLAGS += -fPIC
 ### The version number of VDR (taken from VDR's "config.h"):
-
-VDRVERSION = $(shell grep 'define VDRVERSION ' $(VDRDIR)/config.h | awk '{ print $$3 }' | sed -e 's/"//g')
+APIVERSION = $(call PKGCFG,apiversion)
+#APIVERSION = $(shell grep 'define APIVERSION ' $(VDRDIR)/config.h | awk '{ print $$3 }' | sed -e 's/"//g')
 
 ### The name of the distribution archive:
 
 ARCHIVE = $(PLUGIN)-$(VERSION)
 PACKAGE = vdr-$(ARCHIVE)
 
-### Includes and Defines (add further entries here):
+### The name of the shared object file:
 
-INCLUDES += -I$(VDRDIR)/include -I$(DVBDIR)/include -I../libdsmcc
+SOFILE = libvdr-$(PLUGIN).so
+
+### Includes and Defines (add further entries here):
+DSMCC_INC:=$(shell pkg-config --cflags libdsmcc)
+
+INCLUDES += -I$(VDRDIR)/include -I$(DVBDIR)/include -I. $(DSMCC_INC)
 
 DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 
-### Marc - Edit the following line to point to the libdsmcc.a library
-LIBS += -lz 
+###
+DSMCC_LIB:=$(shell pkg-config --libs libdsmcc)
+
+LIBS += -lz $(DSMCC_LIB)
 
 ### The object files (add further files here):
 
-OBJS = $(PLUGIN).o dsmcc-monitor.o dsmcc-decoder.o dsmcc-siinfo.o libdsmcc.a
+OBJS = dsmcc.o dsmcc-monitor.o dsmcc-decoder.o dsmcc-siinfo.o
+
+### Targets:
+all: $(SOFILE)
+
+plug: $(SOFILE)
 
 ### Implicit rules:
 
 %.o: %.c
-	$(CXX) $(CXXFLAGS) -c $(DEFINES) $(INCLUDES) $<
+	@echo CC $@
+	$(Q)$(CXX) $(CXXFLAGS) -c $(DEFINES) $(INCLUDES) $<
 
 # Dependencies:
 
-MAKEDEP = g++ -MM -MG
+MAKEDEP = $(CXX) -MM -MG
 DEPFILE = .dependencies
 $(DEPFILE): Makefile
 	@$(MAKEDEP) $(DEFINES) $(INCLUDES) $(OBJS:%.o=%.c) > $@
@@ -67,11 +87,14 @@ $(DEPFILE): Makefile
 
 ### Targets:
 
-all: libvdr-$(PLUGIN).so
+$(SOFILE): $(OBJS)
+	@echo LD $@
+	$(Q)$(CXX) $(CXXFLAGS) -shared $(OBJS) $(LIBS) -o $@ 
 
-libvdr-$(PLUGIN).so: $(OBJS)
-	$(CXX) $(CXXFLAGS) -shared $(OBJS) $(LIBS) -o $@ 
-	@cp $@ $(LIBDIR)/$@.$(VDRVERSION)
+install-lib: $(SOFILE)
+	install -D $^ $(LIBDIR)/$^.$(APIVERSION)
+
+install: install-lib
 
 dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)

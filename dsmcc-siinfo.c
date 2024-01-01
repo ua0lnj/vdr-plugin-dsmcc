@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <syslog.h>
 
-#include "linux/dvb/dmx.h"
+#include <linux/dvb/dmx.h>
 #include "dsmcc-siinfo.h"
 
 #define DATA_CAROUSEL_ID	0x13
@@ -24,6 +24,7 @@
 #define DATA_STREAM		0x52
 #define MHP_BROADCAST_ID	0x6F
 #define UK_MHEG_DATA		0x106
+#define RU_MHEG_DATA		0x123
 #define MHP_DATA		0xF0
 
 #define PACK  __attribute__ ((__packed__))
@@ -313,7 +314,7 @@ static int CollectSections(int card_no, int pid, int table_id, char **sects, int
 
   syslog(LOG_ERR, "COllectSections");
 
-   syslog(LOG_ERR, "opening  adapter%d", card_no);
+  syslog(LOG_ERR, "opening  adapter%d", card_no);
   snprintf(name, sizeof(name), "/dev/dvb/adapter%d/demux0", card_no);
 
   memset(sects, 0, sizeof(char*) * 256);
@@ -352,9 +353,8 @@ static int CollectSections(int card_no, int pid, int table_id, char **sects, int
       fprintf(stderr, "bad section length: %x / %x!\n", n, ntohs(h->syntax_len) & 0xfff);
       continue;
     }
-
-    if(!(h->ver_cur & 0x01)) // if not current
-      continue;
+    //syslog(LOG_ERR,"id %x\n",h->table_id);
+    //syslog(LOG_ERR,"ver %x\n",h->ver_cur);
 
     last_section = h->last_section_number;
 
@@ -622,7 +622,8 @@ static void ExtractMhegInfo(int card_no, char **pmtsects, int numsects, struct d
 	      if(descr[0] == DATA_BROADCAST_ID) {
 		int length = descr[1];
 		data_id = descr[2] << 8 | descr[3];
-		if(data_id == UK_MHEG_DATA) {
+
+		if(data_id == RU_MHEG_DATA || data_id == UK_MHEG_DATA) {
 		  int index = 4;
 		  while(index < length+2) {	/* Only 1 app defined... */
 		   app_type_code = descr[index] << 8 | descr[index+1];
@@ -636,7 +637,7 @@ static void ExtractMhegInfo(int card_no, char **pmtsects, int numsects, struct d
 		    * no app data defined. */
 		  } /* TODO verify / save this data */
 		} else if(data_id == MHP_DATA) { /* MHP Object Carousel */
-//		  syslog(LOG_ERR, "MHP Object Carousel data_broadcast_id");
+		  syslog(LOG_ERR, "MHP Object Carousel data_broadcast_id");
 		  int index = 4;
 		  while(index < length) {
 		    app_type_code = descr[index] << 8 | descr[index+1];
@@ -656,7 +657,7 @@ static void ExtractMhegInfo(int card_no, char **pmtsects, int numsects, struct d
 			/* Enhanced Boot - TODO handle! */
 		}
 	      } else {
-		// syslog(LOG_ERR, "Descriptor - %X", descr[0]);
+		 syslog(LOG_ERR, "Descriptor - %X", descr[0]);
 	      }
 	}
 	/* Now save stream info to correct carousel. If no carousel
@@ -736,7 +737,8 @@ static void ExtractMhegInfo(int card_no, char **pmtsects, int numsects, struct d
 	      if(descr[0] == DATA_BROADCAST_ID) {
 		int length = descr[1];
 		data_id = descr[2] << 8 | descr[3];
-		if(data_id == UK_MHEG_DATA) {
+
+		if(data_id == RU_MHEG_DATA || data_id == UK_MHEG_DATA) {
 		  int index = 4;
 		  while(index < length+2) {	/* Only 1 app defined... */
 		   app_type_code = descr[index] << 8 | descr[index+1];
@@ -845,7 +847,7 @@ printf("------------------ METADATA carried in MetadataSection -----------------
             if (pidchild == 0) {
               printf("Child Process!\n");
 
-	      ExtractMetadataSection(card_no, ntohs(s->res_PID) & 0x1fff, status->name);
+	      ExtractMetadataSection(card_no, ntohs(s->res_PID) & 0x1fff, status->channel_name);
 
 	    } else if (pidchild == -1) {
               perror("FORK ");
@@ -864,8 +866,8 @@ printf("------------------ METADATA carried in MetadataSection -----------------
       } else if(s->stream_type == 0x5) {
 	uint8_t *descr;
 
-//	syslog(LOG_ERR, "Detected MHP stream carrying AIT (PID %d)",
-//					ntohs(s->res_PID) & 0x1ffff);
+	syslog(LOG_ERR, "Detected MHP stream carrying AIT (PID %d)",
+					ntohs(s->res_PID) & 0x1ffff);
 	for(descr = s->descrs;
 	    descr < s->descrs + (ntohs(s->res_ES_info_len) & 0xfff);
 	    descr += descr[1] + 2) {
@@ -995,6 +997,7 @@ int GetMhegInfo(int card_no, unsigned short sid, struct dsmcc_status *status)
   }
 
   if(pmt_pid != 0) {
+    syslog(LOG_ERR, "pmt pid %x\n",pmt_pid);
     ret = FindMhegInfoInPMT(card_no, pmt_pid, status);
   }
     
