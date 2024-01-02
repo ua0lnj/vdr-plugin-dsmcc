@@ -12,7 +12,7 @@
 #include "dsmcc-siinfo.h"
 // #include <mpatrol.h>
 
-static const char *VERSION        = "0.4.0";
+static const char *VERSION        = "0.5.0";
 static const char *DESCRIPTION    = "Receive DSM-CC data and decode";
 //static const char *MAINMENUENTRY  = "Dsmcc";
 
@@ -29,6 +29,7 @@ public:
   virtual bool ProcessArgs(int argc, char *argv[]);
   virtual bool Start(void);
   virtual void Housekeeping(void);
+  virtual bool Service(const char * Id, void * Data = NULL);
 //  virtual const char *MainMenuEntry(void) { return MAINMENUENTRY; }
 //  virtual const char *MainMenuEntry(void) { return NULL; }
 //  virtual cOsdObject *MainMenuAction(void);
@@ -81,6 +82,16 @@ void cPluginDsmcc::Housekeeping(void)
 {
   // Perform any cleanup or other regular tasks.
 }
+
+bool cPluginDsmcc::Service(const char *Id, void *Data) {
+  if (Id && strcmp(Id, "Scan dsmcc") == 0/* && Data*/)
+  {
+    cDsmccStatus->Scan(0);
+    return true;
+  }
+  return false;
+}
+
 /*
 cOsdObject *cPluginDsmcc::MainMenuAction(void)
 {

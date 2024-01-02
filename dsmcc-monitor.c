@@ -15,46 +15,49 @@ cDsmccMonitor::~cDsmccMonitor()
   delete receiver;
 }
 
-void cDsmccMonitor::ChannelSwitch(const cDevice *Device, int ChannelNumber, bool LiveView)
+void cDsmccMonitor::Scan(int ChannelNumber)
 {
-//  struct stream *streams = NULL, *str;
   int i;
 
   cDevice *device;
+  device = cDevice::ActualDevice();
 
-  if(Device->IsPrimaryDevice() && ChannelNumber != 0) {
-    delete receiver;
-    receiver = NULL;
-    LOCK_CHANNELS_READ;
-    const cChannel *c = Channels->GetByNumber(ChannelNumber);
+  delete receiver;
+  receiver = NULL;
+  if (!ChannelNumber) ChannelNumber = device->CurrentChannel();
 
-    esyslog("Scanning channel %d", ChannelNumber);
-    esyslog("Collecting MHEG info %d/%d", Device->DeviceNumber(), c->Sid());
+  LOCK_CHANNELS_READ;
+  const cChannel *c = Channels->GetByNumber(ChannelNumber);
 
-    device = cDevice::ActualDevice();
-    esyslog("Got change to channel");
+  esyslog("Scanning channel %d", ChannelNumber);
+  esyslog("Collecting MHEG info %s %d/%d", (const char*)device->DeviceName(), device->DeviceNumber(), c->Sid());
 
-    esyslog("Device = %s", (const char*)device->DeviceName());
+  receiver = new cDsmccReceiver(c->GetChannelID().ToString());
+  GetMhegInfo(device, c->Sid(), receiver->status);
 
-    receiver = new cDsmccReceiver(c->GetChannelID().ToString());
+  if(receiver->status->carousels[0].streams != NULL) {
+    esyslog("Found Object Carousel");
+    device->AttachReceiver(receiver);
 
-    GetMhegInfo(device, c->Sid(), receiver->status);
-
-    if(receiver->status->carousels[0].streams != NULL) {
-	esyslog("Found Object Carousel");
-	device->AttachReceiver(receiver);
-
-	for(i=0;i<MAXCAROUSELS;i++) {
-//		ObjCarousel *cart;
-//		cart = &receiver->carousels[i];
-		if(receiver->status->carousels[i].streams != NULL) {
-		   receiver->AddStream(receiver->status, receiver->status->carousels[i].streams->pid); 
-                 esyslog("Receiving pid %d", receiver->status->carousels[i].streams->pid);
-		}
+    for(i=0;i<MAXCAROUSELS;i++) {
+//	ObjCarousel *cart;
+//	cart = &receiver->carousels[i];
+	if(receiver->status->carousels[i].streams != NULL) {
+	   receiver->AddStream(receiver->status, receiver->status->carousels[i].streams->pid); 
+         esyslog("Receiving pid %d", receiver->status->carousels[i].streams->pid);
 	}
     }
   }
+}
 
+void cDsmccMonitor::ChannelSwitch(const cDevice *Device, int ChannelNumber, bool LiveView)
+{
+  cDevice *device;
+
+  if(Device->IsPrimaryDevice() && ChannelNumber != 0) {
+    esyslog("Got change to channel");
+    Scan(ChannelNumber);
+  }
 }
 
 void cDsmccMonitor::ScanChannels(int numChannels) {

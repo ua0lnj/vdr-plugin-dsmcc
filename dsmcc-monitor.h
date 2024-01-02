@@ -15,6 +15,7 @@ public:
 	~cDsmccMonitor();
 
 	void ScanChannels(int numChannels);
+	void Scan(int ChannelNumber);
 };
 
 
