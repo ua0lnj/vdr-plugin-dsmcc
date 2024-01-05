@@ -272,7 +272,7 @@ static int CollectSections(cDevice *device, int pid, int table_id, char **sects,
   int n, c = 0;
 //  char name[100];
 
-  syslog(LOG_ERR, "COllectSections");
+  syslog(LOG_ERR, "[dsmcc] COllectSections");
   memset(sects, 0, sizeof(char*) * 256);
 
   fd = device->OpenFilter(pid, table_id, 0xff);
@@ -293,7 +293,7 @@ static int CollectSections(cDevice *device, int pid, int table_id, char **sects,
     //syslog(LOG_ERR, "n %d c %d",n,c);
     c = 0;
     if(n < 8) {
-      syslog(LOG_ERR, "n < 8");
+      syslog(LOG_ERR, "[dsmcc] n < 8");
       break;
     }
 
@@ -315,12 +315,12 @@ static int CollectSections(cDevice *device, int pid, int table_id, char **sects,
 
     for(i = 0; i <= last_section; i++) {
       if(!sects[i]) {
-        syslog(LOG_ERR, "!sects[%d]", i);
+        syslog(LOG_ERR, "[dsmcc] !sects[%d]", i);
 	break;
       }
 
       if(i == last_section) {
-        syslog(LOG_ERR, "Set  numsects = %d", last_section+1);
+        syslog(LOG_ERR, "[dsmcc] Set  numsects = %d", last_section+1);
 	*numsects = last_section + 1;
 	ret = 0;
 	done = 1;
@@ -547,7 +547,7 @@ static void ExtractMhegInfo(cDevice *device, char **pmtsects, int numsects, stru
       if(status->debug_fd != NULL) {
         fprintf(status->debug_fd, "[pmtparse] Stream Type %X\n",s->stream_type);
       }
-      syslog(LOG_ERR, "Found Stream Type %X\n", s->stream_type);
+      syslog(LOG_ERR, "[dsmcc] Found Stream Type %X\n", s->stream_type);
 
       if(s->stream_type == 0xB) { // ISO/IEC 13818-6 Type B (DSMCC)
 	uint8_t *descr;
@@ -566,7 +566,7 @@ static void ExtractMhegInfo(cDevice *device, char **pmtsects, int numsects, stru
 	      if(descr[0] == DATA_BROADCAST_ID) {
 		int length = descr[1];
 		data_id = descr[2] << 8 | descr[3];
-		syslog(LOG_ERR, "Object Carousel data_broadcast_id %x", data_id);
+		syslog(LOG_ERR, "[dsmcc] Object Carousel data_broadcast_id %x", data_id);
 		if(data_id == RU_MHEG_DATA || data_id == UK_MHEG_DATA) {
 		  int index = 4;
 		  while(index < length+2) {	/* Only 1 app defined... */
@@ -581,7 +581,7 @@ static void ExtractMhegInfo(cDevice *device, char **pmtsects, int numsects, stru
 		    * no app data defined. */
 		  } /* TODO verify / save this data */
 		} else if(data_id == MHP_DATA) { /* MHP Object Carousel */
-		  syslog(LOG_ERR, "MHP Object Carousel data_broadcast_id");
+		  syslog(LOG_ERR, "[dsmcc] MHP Object Carousel data_broadcast_id");
 		  int index = 4;
 		  while(index < length) {
 		    app_type_code = descr[index] << 8 | descr[index+1];
@@ -601,7 +601,7 @@ static void ExtractMhegInfo(cDevice *device, char **pmtsects, int numsects, stru
 			/* Enhanced Boot - TODO handle! */
 		}
 	      } else {
-		 syslog(LOG_ERR, "Descriptor - %X", descr[0]);
+		 syslog(LOG_ERR, "[dsmcc] Descriptor - %X", descr[0]);
 	      }
 	}
 	/* Now save stream info to correct carousel. If no carousel
@@ -742,7 +742,7 @@ static void ExtractMhegInfo(cDevice *device, char **pmtsects, int numsects, stru
 	    str->assoc_tag = component_tag;
 	    str->next = str->prev = NULL;
 	    status->carousels[car_num].streams = str;
-	    syslog(LOG_ERR, "Initing carousel %d to pid %d", car_num, str->pid);
+	    syslog(LOG_ERR, "[dsmcc] Initing carousel %d to pid %d", car_num, str->pid);
 	    car_num++;
 	  } else {
 	    /* Hmmm, no carousel_id, set to zero and find out
@@ -753,7 +753,7 @@ static void ExtractMhegInfo(cDevice *device, char **pmtsects, int numsects, stru
 	    str->assoc_tag = component_tag;
 	    str->next = str->prev = NULL;
 	    status->carousels[car_num].streams = str;
-	    syslog(LOG_ERR, "Initing carousel %d to pid %d", car_num, str->pid);
+	    syslog(LOG_ERR, "[dsmcc] Initing carousel %d to pid %d", car_num, str->pid);
 	    car_num++;
 	  }
 	} else {
@@ -810,7 +810,7 @@ printf("------------------ METADATA carried in MetadataSection -----------------
       } else if(s->stream_type == 0x5) {
 	uint8_t *descr;
 
-	syslog(LOG_ERR, "Detected MHP stream carrying AIT (PID %d)",
+	syslog(LOG_ERR, "[dsmcc] Detected MHP stream carrying AIT (PID %d)",
 					ntohs(s->res_PID) & 0x1ffff);
 	for(descr = s->descrs;
 	    descr < s->descrs + (ntohs(s->res_ES_info_len) & 0xfff);
@@ -901,7 +901,7 @@ int GetMhegInfo(cDevice * device, unsigned short sid, struct dsmcc_status *statu
   ret = CollectSections(device, 0, 0, patsects, &numsects);
 
   if(ret) {
-    syslog(LOG_ERR, "MhegInfo ret - %d", ret);
+    syslog(LOG_ERR, "[dsmcc] MhegInfo ret - %d", ret);
     goto bail;
   }
 
@@ -941,12 +941,12 @@ int GetMhegInfo(cDevice * device, unsigned short sid, struct dsmcc_status *statu
   }
 
   if(pmt_pid != 0) {
-    syslog(LOG_ERR, "pmt pid %x\n",pmt_pid);
+    syslog(LOG_ERR, "[dsmcc] pmt pid %x\n",pmt_pid);
     ret = FindMhegInfoInPMT(device, pmt_pid, status);
   }
     
 bail:
-  syslog(LOG_ERR, "Bailed");
+  syslog(LOG_ERR, "[dsmcc] Bailed");
   FreeSects(patsects);
   return ret;
 }

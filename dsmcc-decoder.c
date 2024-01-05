@@ -96,7 +96,7 @@ void cDsmccReceiver::Receive(const uchar *Data, int Length) {
                 if(status->carousels[i].streams != NULL) {
                         if((status->carousels[i].filecache->total_files > 0) && ((status->carousels[i].filecache->num_files <= 0) && (status->carousels[i].filecache->num_dirs <= 0))) {
                                 full_cache = 1;
-                                esyslog("Finished receiving cache for carousel %d", i);
+                                esyslog("[dsmcc] Finished receiving cache for carousel %d", i);
                         } else {
                                 full_cache = 0;
                         }

@@ -30,14 +30,14 @@ void cDsmccMonitor::Scan(int ChannelNumber)
   LOCK_CHANNELS_READ;
   const cChannel *c = Channels->GetByNumber(ChannelNumber);
 
-  esyslog("Scanning channel %d", ChannelNumber);
-  esyslog("Collecting MHEG info %s %d/%d", (const char*)device->DeviceName(), device->DeviceNumber(), c->Sid());
+  esyslog("[dsmcc] Scanning channel %d", ChannelNumber);
+  esyslog("[dsmcc] Collecting MHEG info %s %d/%d", (const char*)device->DeviceName(), device->DeviceNumber(), c->Sid());
 
   receiver = new cDsmccReceiver(c->GetChannelID().ToString());
   GetMhegInfo(device, c->Sid(), receiver->status);
 
   if(receiver->status->carousels[0].streams != NULL) {
-    esyslog("Found Object Carousel");
+    esyslog("[dsmcc] Found Object Carousel");
     device->AttachReceiver(receiver);
 
     for(i=0;i<MAXCAROUSELS;i++) {
@@ -45,7 +45,7 @@ void cDsmccMonitor::Scan(int ChannelNumber)
 //	cart = &receiver->carousels[i];
 	if(receiver->status->carousels[i].streams != NULL) {
 	   receiver->AddStream(receiver->status, receiver->status->carousels[i].streams->pid); 
-         esyslog("Receiving pid %d", receiver->status->carousels[i].streams->pid);
+         esyslog("[dsmcc] Receiving pid %d", receiver->status->carousels[i].streams->pid);
 	}
     }
   }
@@ -57,7 +57,7 @@ void cDsmccMonitor::ChannelSwitch(const cDevice *Device, int ChannelNumber, bool
   if (cPluginManager::GetPlugin("hbbtvng") && LiveView) return;
 
   if(Device->IsPrimaryDevice() && ChannelNumber != 0) {
-    esyslog("Got change to channel");
+    esyslog("[dsmcc] Got change to channel");
     Scan(ChannelNumber);
   }
 }
@@ -67,7 +67,7 @@ void cDsmccMonitor::ScanChannels(int numChannels) {
     LOCK_CHANNELS_READ;
     const cChannel *c = Channels->GetByNumber(i);
     cDevice *dev = cDevice::ActualDevice();
-    esyslog("Switching to new channel after sleep");
+    esyslog("[dsmcc] Switching to new channel after sleep");
     dev->SwitchChannel(c, true);
     while(receiver && receiver->Active()) { sleep(5); }
   }
