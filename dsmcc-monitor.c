@@ -4,6 +4,7 @@
 #include "dsmcc-cache.h"
 // #include <mpatrol.h>
 #include <vdr/dvbdevice.h>
+#include <vdr/plugin.h>
 
 cDsmccMonitor::cDsmccMonitor(void)
 {
@@ -52,7 +53,8 @@ void cDsmccMonitor::Scan(int ChannelNumber)
 
 void cDsmccMonitor::ChannelSwitch(const cDevice *Device, int ChannelNumber, bool LiveView)
 {
-  cDevice *device;
+  //For LiveView, the hbbtvng plugin uses the "Scan dsmcc" service
+  if (cPluginManager::GetPlugin("hbbtvng") && LiveView) return;
 
   if(Device->IsPrimaryDevice() && ChannelNumber != 0) {
     esyslog("Got change to channel");
