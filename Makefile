@@ -54,7 +54,9 @@ DSMCC_INC:=$(shell pkg-config --cflags libdsmcc)
 
 INCLUDES += -I$(VDRDIR)/include -I$(DVBDIR)/include -I. $(DSMCC_INC)
 
-DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
+CACHEDIR ?= /var/cache/vdr
+
+DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"' -DCACHEDIR=\"$(CACHEDIR)\"
 
 ###
 DSMCC_LIB:=$(shell pkg-config --libs libdsmcc)

@@ -7,6 +7,11 @@
 
 cDsmccReceiver::cDsmccReceiver(const char *channel) : cReceiver(0, -1) {
 
+	char *cache;
+	cache = (char*)malloc(strlen(CACHEDIR)+6+1);
+	strcpy(cache, CACHEDIR);
+	strcpy(cache + strlen(CACHEDIR), "/dsmcc");
+
 	if(channel != NULL) {
 		name = (char*)malloc(strlen(channel)+1);
 		strcpy(name, channel);
@@ -15,8 +20,9 @@ cDsmccReceiver::cDsmccReceiver(const char *channel) : cReceiver(0, -1) {
 		strcpy(name, "Unknown");
 	}
 
-	status = dsmcc_open(channel, "/var/cache/vdr/dsmcc", NULL);	/* XXX pass log_fd */
+	status = dsmcc_open(channel, cache, NULL);	/* XXX pass log_fd */
 
+	free(cache);
         scanning = 0;   /* Set to 1 to scan thorugh all channels for carousel
                            Set to 0 to disable
                         */
