@@ -481,7 +481,7 @@ static void FreeMetadataSects(struct Metadata_sect **sects)
 
 static void ExtractMetadataSection(cDevice *device, int PID, char *chaname) {
   FILE *metadata_fd;
-  int numsects;
+  int numsects = 0;
   char dirbuf1[256];
   char dirbuf2[256];
   char filebuf[256];
@@ -489,7 +489,7 @@ static void ExtractMetadataSection(cDevice *device, int PID, char *chaname) {
   struct Metadata_sect *metadatasects[256];
   const char *cache = "/var/cache/vdr/dsmcc";
 
-  int j, i = 0;
+  int j = 0, i = 0;
   while (1) {
     CollectMetadataSections(device, PID, 0x06, metadatasects, &numsects);
 
@@ -821,16 +821,18 @@ printf("------------------ METADATA carried in MetadataSection -----------------
 		int index = 2;
 		FILE *ait_fd;
 		char *aitsects[256];
-		int numsects;
+		int numsects = 0;
 		ait_fd = fopen("/tmp/ait.version.descr", "a");
-		while(index < length+2) {
-		  int type = descr[index++];
-		  int version = descr[index++] & 0x1F;
-		  fprintf(ait_fd, "AIT sub table type %d version %d\n", type,
+		if (ait_fd) {
+		    while(index < length+2) {
+		      int type = descr[index++];
+		      int version = descr[index++] & 0x1F;
+		      fprintf(ait_fd, "AIT sub table type %d version %d\n", type,
 				  		version);
-		  /* fprintf(ait_fd, "AIT sub tabla tipo %d version %d", type, version): */
-		}
-		fclose(ait_fd);
+		      /* fprintf(ait_fd, "AIT sub tabla tipo %d version %d", type, version): */
+		    }
+		    fclose(ait_fd);
+		} else syslog(LOG_ERR, "[dsmcc] error open /tmp/ait.version.descr\n");
 
 		/* Receive AIT sections from stream and write to /tmp
 		 * TODO - process AIT table */
@@ -838,10 +840,12 @@ printf("------------------ METADATA carried in MetadataSection -----------------
 				aitsects, &numsects);
 		if(aitsects != NULL) {
 			ait_fd = fopen("/tmp/ait.table", "a");
-			for(i = 0;i < numsects; i++) {
+			if (ait_fd) {
+			    for(i = 0;i < numsects; i++) {
 				fwrite(aitsects[i], 1, 1024, ait_fd);
-			}
-			fclose(ait_fd);
+			    }
+			    fclose(ait_fd);
+			} else syslog(LOG_ERR, "[dsmcc] error open /tmp/ait.table\n");
 			FreeSects(aitsects);
 		}
 
