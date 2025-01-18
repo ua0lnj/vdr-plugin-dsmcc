@@ -16,12 +16,12 @@ cDsmccMonitor::~cDsmccMonitor()
   delete receiver;
 }
 
-void cDsmccMonitor::Scan(int ChannelNumber)
+void cDsmccMonitor::Scan(int ChannelNumber, cDevice *device)
 {
   int i;
 
-  cDevice *device;
-  device = cDevice::ActualDevice();
+  if (!device)
+    device = cDevice::PrimaryDevice();
 
   delete receiver;
   receiver = NULL;
@@ -58,7 +58,7 @@ void cDsmccMonitor::ChannelSwitch(const cDevice *Device, int ChannelNumber, bool
 
   if(Device->IsPrimaryDevice() && ChannelNumber != 0) {
     esyslog("[dsmcc] Got change to channel");
-    Scan(ChannelNumber);
+    Scan(ChannelNumber, (cDevice *)Device);
   }
 }
 

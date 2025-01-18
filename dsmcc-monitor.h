@@ -15,7 +15,7 @@ public:
 	~cDsmccMonitor();
 
 	void ScanChannels(int numChannels);
-	void Scan(int ChannelNumber);
+	void Scan(int ChannelNumber, cDevice *device = NULL);
 };
 
 
