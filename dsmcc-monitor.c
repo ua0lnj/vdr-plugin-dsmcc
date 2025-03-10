@@ -23,12 +23,17 @@ void cDsmccMonitor::Scan(int ChannelNumber, cDevice *device)
   if (!device)
     device = cDevice::PrimaryDevice();
 
-  delete receiver;
-  receiver = NULL;
+  if (receiver) {
+    delete receiver;
+    receiver = NULL;
+  }
+
   if (!ChannelNumber) ChannelNumber = device->CurrentChannel();
 
   LOCK_CHANNELS_READ;
   const cChannel *c = Channels->GetByNumber(ChannelNumber);
+
+  device = cDevice::GetDevice(c, 0, false, true);
 
   esyslog("[dsmcc] Scanning channel %d", ChannelNumber);
   esyslog("[dsmcc] Collecting MHEG info %s %d/%d", (const char*)device->DeviceName(), device->DeviceNumber(), c->Sid());
